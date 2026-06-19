@@ -59,4 +59,4 @@ The goal is to explore revenue trends, customer demographics, payment preference
 
 - `walmart_analysis.sql` — Walmart Sales Data Analysis queries
 - `ecommerce_analysis.sql` — E-Commerce Customer Behavior Analysis queries
-- `README.md` — Project documentation and findings
+- `ecommerce README.md` — Project documentation and findings
