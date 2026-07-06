@@ -1,0 +1,151 @@
+-- HR Employee Attrition Analysis
+-- Dataset: IBM HR Analytics | 1,470 rows | Source: Kaggle
+-- Tables: employee_info, employee_performance
+
+
+-- Preview Data
+
+SELECT * FROM employee_info LIMIT 10;
+SELECT * FROM employee_performance LIMIT 10;
+
+
+-- Step 1: Split main table into two tables
+
+CREATE TABLE employee_info AS
+SELECT employeenumber, age, gender, department,
+       jobrole, maritalstatus, educationfield, businesstravel
+FROM WA_FnUseC_HREmployeeAttrition;
+
+CREATE TABLE employee_performance AS
+SELECT employeenumber, monthlyincome, jobsatisfaction,
+       performanceratin, attrition, overtime,
+       yearsatcompany, worklifebalance, percentsalaryhik
+FROM WA_FnUseC_HREmployeeAttrition;
+
+
+-- Attrition Analysis
+
+-- Q1. How many employees left the company vs stayed?
+-- Finding: 1,233 employees stayed and 237 left the company
+
+SELECT attrition, COUNT(*) AS total_employees
+FROM employee_performance
+GROUP BY attrition;
+
+
+-- Q2. Which department has the highest attrition rate?
+-- Finding: Research & Development has the highest attrition (133),
+--          followed by Sales (92) and Human Resources (12)
+
+SELECT i.department, COUNT(*) AS total_attrition
+FROM employee_info i
+JOIN employee_performance p
+ON i.employeenumber = p.employeenumber
+WHERE p.attrition = 'Yes'
+GROUP BY i.department
+ORDER BY total_attrition DESC;
+
+
+-- Q3. Do employees who work overtime leave more?
+-- Finding: Employees working overtime leave more (127) compared to those who don't (110)
+
+SELECT overtime, COUNT(*) AS total_employee
+FROM employee_performance
+WHERE attrition = 'Yes'
+GROUP BY overtime;
+
+
+-- Salary & Job Analysis
+
+-- Q4. Which job role has the highest average monthly income?
+-- Finding: Manager has the highest average income (17,181.68),
+--          followed by Research Director (16,033.55)
+
+SELECT i.jobrole, ROUND(AVG(p.monthlyincome), 2) AS avg_monthly_income
+FROM employee_info i
+JOIN employee_performance p
+ON i.employeenumber = p.employeenumber
+GROUP BY i.jobrole
+ORDER BY avg_monthly_income DESC;
+
+
+-- Q5. Which department has the highest average salary?
+-- Finding: Sales has the highest average salary (6,959.17),
+--          followed by Human Resources (6,654.51)
+
+SELECT i.department, ROUND(AVG(p.monthlyincome), 2) AS avg_monthly_salary
+FROM employee_info i
+JOIN employee_performance p
+ON i.employeenumber = p.employeenumber
+GROUP BY i.department
+ORDER BY avg_monthly_salary DESC;
+
+
+-- Employee Demographics
+
+-- Q6. Which age group has the highest attrition?
+-- Finding: Age group 26-35 has the highest attrition (116),
+--          followed by 36-50 (59) and 18-25 (44)
+
+SELECT
+    CASE
+        WHEN i.age <= 25 THEN '18-25'
+        WHEN i.age <= 35 THEN '26-35'
+        WHEN i.age <= 50 THEN '36-50'
+        WHEN i.age > 50  THEN '50+'
+    END AS age_group,
+    COUNT(*) AS total_attrition
+FROM employee_info i
+JOIN employee_performance p
+ON i.employeenumber = p.employeenumber
+WHERE p.attrition = 'Yes'
+GROUP BY age_group
+ORDER BY total_attrition DESC;
+
+
+-- Q7. Does marital status affect attrition?
+-- Finding: Single employees leave the most (120),
+--          followed by Married (84) and Divorced (33)
+
+SELECT i.maritalstatus, COUNT(*) AS total_attritions
+FROM employee_info i
+JOIN employee_performance p
+ON i.employeenumber = p.employeenumber
+WHERE p.attrition = 'Yes'
+GROUP BY i.maritalstatus
+ORDER BY total_attritions DESC;
+
+
+-- Satisfaction & Performance
+
+-- Q8. What is the average job satisfaction by department?
+-- Finding: All three departments have the same average satisfaction score of 3
+
+SELECT i.department, ROUND(AVG(p.jobsatisfaction)) AS avg_satisfaction
+FROM employee_info i
+JOIN employee_performance p
+ON i.employeenumber = p.employeenumber
+GROUP BY i.department
+ORDER BY avg_satisfaction DESC;
+
+
+-- Q9. Do higher performing employees get better salary hikes?
+-- Finding: Employees with performance rating 4 get 22% avg hike,
+--          while rating 3 employees get 14% avg hike
+
+SELECT performanceratin, ROUND(AVG(percentsalaryhik)) AS avg_salary_hike
+FROM employee_performance
+GROUP BY performanceratin
+ORDER BY avg_salary_hike DESC;
+
+
+-- Experience Analysis
+
+-- Q10. Do employees with more years at company earn more?
+-- Finding: Salary generally increases with years at company,
+--          from 4,113 at 0 years to higher amounts as tenure grows
+
+SELECT yearsatcompany, ROUND(AVG(monthlyincome), 2) AS avg_salary
+FROM employee_performance
+GROUP BY yearsatcompany
+ORDER BY yearsatcompany ASC;
